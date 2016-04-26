@@ -3,6 +3,7 @@ package org.jboss.resteasy.plugins.spring;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.plugins.spring.i18n.Messages;
 import org.jboss.resteasy.spi.Registry;
+import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.springframework.web.context.ConfigurableWebApplicationContext;
 
@@ -40,19 +41,13 @@ public class SpringContextLoaderSupport
 {
    public void customizeContext(ServletContext servletContext, ConfigurableWebApplicationContext configurableWebApplicationContext)
    {
-      ResteasyProviderFactory providerFactory = (ResteasyProviderFactory) servletContext.getAttribute(ResteasyProviderFactory.class.getName());
-      if (providerFactory == null)
-         throw new RuntimeException(Messages.MESSAGES.providerFactoryIsNull());
+      ResteasyDeployment deployment = (ResteasyDeployment) servletContext.getAttribute(ResteasyDeployment.class.getName());
 
-      Registry registry = (Registry) servletContext.getAttribute(Registry.class.getName());
-      if (registry == null)
-         throw new RuntimeException(Messages.MESSAGES.registryIsNull());
-
-      Dispatcher dispatcher = (Dispatcher) servletContext.getAttribute(Dispatcher.class.getName());
-      if (dispatcher == null)
-         throw new RuntimeException(Messages.MESSAGES.dispatcherIsNull());
+      if (deployment == null) {
+         throw new RuntimeException(Messages.MESSAGES.deploymentIsNull());
+      }
          
-      SpringBeanProcessor processor = new SpringBeanProcessor(dispatcher, registry, providerFactory);
+      SpringBeanProcessor processor = new SpringBeanProcessor(deployment);
       configurableWebApplicationContext.addBeanFactoryPostProcessor(processor);
       configurableWebApplicationContext.addApplicationListener(processor);
    }
