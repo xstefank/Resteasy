@@ -212,6 +212,17 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
     */
    public ResteasyProviderFactory(ResteasyProviderFactory parent)
    {
+      this(parent, false);
+   }
+
+   /**
+    * If local is true, copies components needed by client configuration,
+    * so that parent is not referenced. 
+    * @param parent
+    * @param local
+    */
+   public ResteasyProviderFactory(ResteasyProviderFactory parent, boolean local)
+   {
       this.parent = parent;
       featureClasses = new CopyOnWriteArraySet<Class<?>>();
       featureInstances = new CopyOnWriteArraySet<Object>();
@@ -220,6 +231,19 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
       properties = new ConcurrentHashMap<String, Object>();
       properties.putAll(parent.getProperties());
       enabledFeatures = new CopyOnWriteArraySet<Feature>();
+      
+      if (local)
+      {
+         classContracts = new ConcurrentHashMap<Class<?>, Map<Class<?>, Integer>>();
+         if (parent != null)
+         {
+            providerClasses.addAll(parent.providerClasses);
+            providerInstances.addAll(parent.providerInstances);
+            classContracts.putAll(parent.classContracts);
+            properties.putAll(parent.properties);
+            enabledFeatures.addAll(parent.enabledFeatures);
+         }
+      }
    }
 
    protected void initialize()
@@ -1728,11 +1752,6 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
 
    public void registerProviderInstance(Object provider, Map<Class<?>, Integer> contracts, Integer priorityOverride, boolean builtIn)
    {
-      if (getClasses().contains(provider.getClass()))
-      {
-         LogMessages.LOGGER.providerClassAlreadyRegistered(provider.getClass().getName());
-         return;
-      }
       for (Object registered : getInstances())
       {
          if (registered == provider)
@@ -1740,6 +1759,11 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
             LogMessages.LOGGER.providerInstanceAlreadyRegistered(provider.getClass().getName());
             return;
          }
+      }
+      if (getClasses().contains(provider.getClass()))
+      {
+         LogMessages.LOGGER.providerClassAlreadyRegistered(provider.getClass().getName());
+         return;
       }
       Map<Class<?>, Integer> newContracts = new HashMap<Class<?>, Integer>();
       if (isA(provider, ParamConverterProvider.class, contracts))

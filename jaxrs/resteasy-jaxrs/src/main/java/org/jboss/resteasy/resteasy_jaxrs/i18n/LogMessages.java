@@ -101,8 +101,8 @@ public interface LogMessages extends BasicLogger
    void JAXRSAnnotationsFoundAtNonPublicMethod(String className, String method);  
 
    @LogMessage(level = Level.WARN)
-   @Message(id = BASE + 142, value = "Multiple resource methods match request. Selecting one.")
-   void multipleMethodsMatch();
+   @Message(id = BASE + 142, value = "Multiple resource methods match request {0}. Selecting one. Matching methods: {1}", format=Format.MESSAGE_FORMAT)
+   void multipleMethodsMatch(String request, String[] methods);
    
    @LogMessage(level = Level.WARN)
    @Message(id = BASE + 145, value = "NoClassDefFoundError: Unable to load builtin provider {0} from {1}", format=Format.MESSAGE_FORMAT)
@@ -127,6 +127,10 @@ public interface LogMessages extends BasicLogger
    @LogMessage(level = Level.WARN)
    @Message(id = BASE + 170, value = "A reader for {0} was not found. This provider is currently configured to handle only {1}", format=Format.MESSAGE_FORMAT)
    void readerNotFound(MediaType mediaType, String[] availableTypes);
+   
+   @LogMessage(level = Level.WARN)
+   @Message(id = BASE + 172, value = "Singleton {0} object class {1} already deployed. Singleton ignored.", format=Format.MESSAGE_FORMAT)
+   void singletonClassAlreadyDeployed(String type, String className);
       
    @LogMessage(level = Level.WARN)
    @Message(id = BASE + 175, value = "The use of %s is deprecated, please use javax.ws.rs.Application as a context-param instead")
