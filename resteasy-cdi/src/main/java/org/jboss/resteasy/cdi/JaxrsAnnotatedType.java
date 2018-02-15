@@ -12,21 +12,26 @@ import java.util.Set;
 
 /**
  * This wrapper allows additional metadata to be added during bootstrap.
- * 
+ *
  * @author Jozef Hartinger
- * 
+ *
  */
 public class JaxrsAnnotatedType<TYPE> implements AnnotatedType<TYPE>
 {
 
    private AnnotatedType<TYPE> delegate;
    private Set<Annotation> annotations = new HashSet<Annotation>();
-   
-   public JaxrsAnnotatedType(AnnotatedType<TYPE> delegate, Annotation scope)
+
+   public JaxrsAnnotatedType(AnnotatedType<TYPE> delegate, Set<Annotation> annotations)
    {
       this.delegate = delegate;
       this.annotations.addAll(delegate.getAnnotations());
-      this.annotations.add(scope);
+      this.annotations.addAll(annotations);
+   }
+
+   public JaxrsAnnotatedType(AnnotatedType<TYPE> delegate, Annotation scope)
+   {
+      this(delegate, Collections.singleton(scope));
    }
 
    public Set<AnnotatedConstructor<TYPE>> getConstructors()

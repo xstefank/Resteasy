@@ -3,7 +3,7 @@
          xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <modelVersion>4.0.0</modelVersion>
-    
+
     <parent>
         <groupId>org.jboss.resteasy</groupId>
         <artifactId>resteasy-testsuite</artifactId>
@@ -113,4 +113,60 @@
             <artifactId>jboss-logging-processor</artifactId>
         </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration combine.children="append">
+                    <!--
+                    Skip tests by default. Will be using different executions
+                    setup to run different set of tests with different configurations
+                    -->
+                    <skip>true</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <!-- run all tests except for the ones require CDI to be not present -->
+                        <id>test-phase-execution</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration combine.children="append">
+                            <skip>false</skip>
+                            <includes>
+                                <include>**/*Test.java</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/AcceptTest.java</exclude>
+                                <exclude>**/SegmentTest.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- Run tests without CDI present on the classpath -->
+                        <id>no-cdi-test-execution</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration combine.children="append">
+                            <classpathDependencyExcludes>
+                                <classpathDependencyExclude>org.jboss.resteasy:resteasy-cdi</classpathDependencyExclude>
+                            </classpathDependencyExcludes>
+                            <skip>false</skip>
+                            <includes>
+                                <include>**/AcceptTest.java</include>
+                                <include>**/SegmentTest.java</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/*$*</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>

@@ -13,6 +13,8 @@ import org.jboss.resteasy.plugins.providers.ServerFormUrlEncodedProvider;
 import org.jboss.resteasy.plugins.server.resourcefactory.JndiComponentResourceFactory;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.LogMessages;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
+import org.jboss.resteasy.spi.metadata.ResourceBuilder;
+import org.jboss.resteasy.spi.metadata.ResourceBuilderSupplier;
 import org.jboss.resteasy.util.GetRestful;
 
 import javax.ws.rs.container.ResourceContext;
@@ -83,7 +85,7 @@ public class ResteasyDeployment
    public void start()
    {
       // it is very important that each deployment create their own provider factory
-      // this allows each WAR to have their own set of providers 
+      // this allows each WAR to have their own set of providers
       if (providerFactory == null) providerFactory = new ResteasyProviderFactory();
       providerFactory.setRegisterBuiltins(registerBuiltin);
 
@@ -154,7 +156,7 @@ public class ResteasyDeployment
       // push context data so we can inject it
       Map contextDataMap = ResteasyProviderFactory.getContextDataMap();
       contextDataMap.putAll(dispatcher.getDefaultContextObjects());
-      
+
       try
       {
          if (injectorFactoryClass != null)
@@ -370,6 +372,7 @@ public class ResteasyDeployment
       {
          dispatcher.getDefaultContextObjects().put(Application.class, application);
          ResteasyProviderFactory.getContextDataMap().put(Application.class, application);
+         ResteasyProviderFactory.getContextDataMap().put(ResourceBuilder.class, ResourceBuilderSupplier.getBuilder());
          if (processApplication(application))
          {
             // Application class registered something so don't use scanning data.  See JAX-RS spec for more detail.
@@ -972,7 +975,7 @@ public class ResteasyDeployment
    {
       this.widerRequestMatching = widerRequestMatching;
    }
-   
+
    public boolean isLooseStep2RequestMatching()
    {
       return looseStep2RequestMatching;

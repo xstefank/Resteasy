@@ -108,7 +108,7 @@
             <version>${version.resteasy.testsuite}</version>
             <scope>provided</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-jaxb-provider</artifactId>
@@ -129,7 +129,7 @@
             <version>${version.resteasy.testsuite}</version>
             <scope>provided</scope>
         </dependency>
-        
+
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-multipart-provider</artifactId>
@@ -222,19 +222,19 @@
             <artifactId>resteasy-netty4</artifactId>
             <version>${project.version}</version>
         </dependency>
-        
+
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-wadl-undertow-connector</artifactId>
             <version>${project.version}</version>
         </dependency>
-        
+
         <dependency>
             <groupId>org.jboss.resteasy</groupId>
             <artifactId>resteasy-html</artifactId>
             <version>${project.version}</version>
         </dependency>
-                         
+
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
@@ -291,7 +291,7 @@
             <groupId>org.hamcrest</groupId>
             <artifactId>hamcrest-all</artifactId>
         </dependency>
-        
+
         <dependency>
             <groupId>org.glassfish</groupId>
             <artifactId>javax.el</artifactId>
@@ -332,6 +332,57 @@
     </dependencies>
 
     <build>
+        <plugins>
+            <plugin>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration combine.children="append">
+                    <!--
+                    Skip tests by default. Will be using different executions
+                    setup to run different set of tests with different configurations
+                    -->
+                    <skip>true</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <!-- run all tests except for the ones require CDI to be not present -->
+                        <id>test-phase-execution</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration combine.children="append">
+                            <skip>false</skip>
+                            <includes>
+                                <include>**/*Test.java</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/ResponseObjectTest.java</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <!-- Run tests without CDI present on the classpath -->
+                        <id>no-cdi-test-execution</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration combine.children="append">
+                            <classpathDependencyExcludes>
+                                <classpathDependencyExclude>org.jboss.resteasy:resteasy-cdi</classpathDependencyExclude>
+                            </classpathDependencyExcludes>
+                            <skip>false</skip>
+                            <includes>
+                                <include>**/ResponseObjectTest.java</include>
+                            </includes>
+                            <excludes>
+                                <exclude>**/*$*</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
         <testResources>
             <testResource>
                 <directory>src/test/resources</directory>

@@ -129,7 +129,7 @@ public class CdiInjectorFactory implements InjectorFactory
     *
     * @return BeanManager instance
     */
-   protected BeanManager lookupBeanManager()
+   protected static BeanManager lookupBeanManager()
    {
       BeanManager beanManager = null;
 
@@ -166,7 +166,7 @@ public class CdiInjectorFactory implements InjectorFactory
       throw new RuntimeException(Messages.MESSAGES.unableToLookupBeanManager());
    }
 
-   private BeanManager lookupBeanManagerInJndi(String name)
+   private static BeanManager lookupBeanManagerInJndi(String name)
    {
       try
       {
@@ -247,8 +247,9 @@ public class CdiInjectorFactory implements InjectorFactory
     *
     * @return ResteasyCdiExtension instance
     */
-   private ResteasyCdiExtension lookupResteasyCdiExtension()
+   public static ResteasyCdiExtension lookupResteasyCdiExtension()
    {
+      BeanManager manager = lookupBeanManager();
       Set<Bean<?>> beans = manager.getBeans(ResteasyCdiExtension.class);
       Bean<?> bean = manager.resolve(beans);
       if (bean == null)

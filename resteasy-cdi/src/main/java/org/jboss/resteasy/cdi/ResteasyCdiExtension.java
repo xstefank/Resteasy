@@ -3,14 +3,18 @@ package org.jboss.resteasy.cdi;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.decorator.Decorator;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.Stereotype;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
@@ -18,6 +22,7 @@ import javax.enterprise.inject.spi.BeforeBeanDiscovery;
 import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
+import javax.enterprise.inject.spi.ProcessBean;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
 import javax.enterprise.inject.spi.ProcessSessionBean;
 import javax.enterprise.inject.spi.WithAnnotations;
@@ -44,13 +49,16 @@ import org.jboss.resteasy.util.GetRestful;
 public class ResteasyCdiExtension implements Extension
 {
    private static boolean active;
-   
+
    private BeanManager beanManager;
    private static final String JAVAX_EJB_STATELESS = "javax.ejb.Stateless";
    private static final String JAVAX_EJB_SINGLETON = "javax.ejb.Singleton";
+   private static final String JAVAX_WS_RS = "javax.ws.rs";
 
-   private final List<Class> providers = new ArrayList<Class>();
-   private final List<Class> resources = new ArrayList<Class>();
+   private final List<Class> providers = new ArrayList<>();
+   private final List<Class> resources = new ArrayList<>();
+
+    private final Map<Class<?>, Set<Annotation>> stereotypedClasses = new HashMap<>();
 
    // Scope literals
    public static final Annotation requestScopedLiteral = new AnnotationLiteral<RequestScoped>()
@@ -66,7 +74,7 @@ public class ResteasyCdiExtension implements Extension
    {
       return active;
    }
-   
+
    private Map<Class<?>, Type> sessionBeanInterface = new HashMap<Class<?>, Type>();
 
    /**
@@ -79,6 +87,49 @@ public class ResteasyCdiExtension implements Extension
    }
 
    /**
+    * Collects the JAX-RS annotations associated with the {@link Stereotype} annotated classes
+    */
+   public <T> void observeStereotypes(@WithAnnotations({Stereotype.class}) @Observes ProcessAnnotatedType<T> event, BeanManager beanManager)
+   {
+      AnnotatedType<T> annotatedType = event.getAnnotatedType();
+      Set<Annotation> jaxRsAnnotations = collectJaxRsAnnotations(annotatedType.getAnnotations(), beanManager);
+
+      if (Utils.isAnnotationPresent(Path.class, jaxRsAnnotations))
+      {
+         stereotypedClasses.put(annotatedType.getJavaClass(), jaxRsAnnotations);
+      }
+   }
+
+   private Set<Annotation> collectJaxRsAnnotations(Set<Annotation> annotations, BeanManager beanManager)
+   {
+      Set<Annotation> jaxRsAnnotations = new HashSet<>();
+
+      for (Annotation annotation : annotations)
+      {
+         if (isJaxRsAnnotation(annotation))
+         {
+            jaxRsAnnotations.add(annotation);
+         } else if (beanManager.isStereotype(annotation.annotationType()))
+         {
+            Set<Annotation> stereotypeDefinition = beanManager.getStereotypeDefinition(annotation.annotationType());
+            jaxRsAnnotations.addAll(collectJaxRsAnnotations(stereotypeDefinition, beanManager));
+         }
+      }
+
+      return jaxRsAnnotations;
+   }
+
+   private boolean isJaxRsAnnotation(Annotation annotation)
+   {
+      return annotation.annotationType().getName().startsWith(JAVAX_WS_RS);
+   }
+
+   public Map<Class<?>, Set<Annotation>> getStereotypedClasses()
+   {
+      return Collections.unmodifiableMap(stereotypedClasses);
+   }
+
+    /**
     * Set a default scope for each CDI bean which is a JAX-RS Resource.
     *
     * @param event
@@ -96,7 +147,7 @@ public class ResteasyCdiExtension implements Extension
                && !annotatedType.isAnnotationPresent(Decorator.class))
        {
            LogMessages.LOGGER.debug(Messages.MESSAGES.discoveredCDIBeanJaxRsResource(annotatedType.getJavaClass().getCanonicalName()));
-           event.setAnnotatedType(wrapAnnotatedType(annotatedType, requestScopedLiteral));
+           event.setAnnotatedType(wrapAnnotatedTypeWithScope(annotatedType, requestScopedLiteral));
            this.resources.add(annotatedType.getJavaClass());
        }
    }
@@ -118,7 +169,7 @@ public class ResteasyCdiExtension implements Extension
                && annotatedType.isAnnotationPresent(Provider.class))
        {
            LogMessages.LOGGER.debug(Messages.MESSAGES.discoveredCDIBeanJaxRsProvider(annotatedType.getJavaClass().getCanonicalName()));
-           event.setAnnotatedType(wrapAnnotatedType(annotatedType, applicationScopedLiteral));
+           event.setAnnotatedType(wrapAnnotatedTypeWithScope(annotatedType, applicationScopedLiteral));
            this.providers.add(annotatedType.getJavaClass());
        }
    }
@@ -137,11 +188,15 @@ public class ResteasyCdiExtension implements Extension
        if(!isSessionBean(annotatedType))
        {
            LogMessages.LOGGER.debug(Messages.MESSAGES.discoveredCDIBeanApplication(annotatedType.getJavaClass().getCanonicalName()));
-           event.setAnnotatedType(wrapAnnotatedType(annotatedType, applicationScopedLiteral));
+           event.setAnnotatedType(wrapAnnotatedTypeWithScope(annotatedType, applicationScopedLiteral));
        }
    }
 
-   protected <T> AnnotatedType<T> wrapAnnotatedType(AnnotatedType<T> type, Annotation scope)
+    protected <T> AnnotatedType<T> wrapAnnotatedTypeWithAnnotations(AnnotatedType<T> type, Set<Annotation> annotations) {
+        return new JaxrsAnnotatedType<T>(type, annotations);
+    }
+
+   protected <T> AnnotatedType<T> wrapAnnotatedTypeWithScope(AnnotatedType<T> type, Annotation scope)
    {
       if (Utils.isScopeDefined(type, beanManager))
       {

@@ -7,7 +7,9 @@ import org.jboss.resteasy.spi.HttpResponse;
 import org.jboss.resteasy.spi.PropertyInjector;
 import org.jboss.resteasy.spi.ResourceFactory;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.spi.metadata.JaxrsResourceBuilder;
 import org.jboss.resteasy.spi.metadata.ResourceBuilder;
+import org.jboss.resteasy.spi.metadata.ResourceBuilderSupplier;
 import org.jboss.resteasy.spi.metadata.ResourceClass;
 import org.jboss.resteasy.spi.metadata.ResourceConstructor;
 
@@ -27,7 +29,7 @@ public class POJOResourceFactory implements ResourceFactory
    public POJOResourceFactory(Class<?> scannableClass)
    {
       this.scannableClass = scannableClass;
-      this.resourceClass = ResourceBuilder.rootResourceFromAnnotations(scannableClass);
+      this.resourceClass = ResourceBuilderSupplier.getBuilder().rootResourceFromAnnotations(scannableClass);
    }
 
    public POJOResourceFactory(ResourceClass resourceClass)
@@ -39,7 +41,7 @@ public class POJOResourceFactory implements ResourceFactory
    public void registered(ResteasyProviderFactory factory)
    {
       ResourceConstructor constructor = resourceClass.getConstructor();
-      if (constructor == null) constructor = ResourceBuilder.constructor(resourceClass.getClazz());
+      if (constructor == null) constructor = ResourceBuilderSupplier.getBuilder().constructor(resourceClass.getClazz());
       if (constructor == null)
       {
          throw new RuntimeException(Messages.MESSAGES.unableToFindPublicConstructorForClass(scannableClass.getName()));
