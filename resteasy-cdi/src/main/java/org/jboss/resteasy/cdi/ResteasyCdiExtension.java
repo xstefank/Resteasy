@@ -3,14 +3,18 @@ package org.jboss.resteasy.cdi;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.decorator.Decorator;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.Stereotype;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
@@ -44,13 +48,16 @@ import org.jboss.resteasy.util.GetRestful;
 public class ResteasyCdiExtension implements Extension
 {
    private static boolean active;
-   
+
    private BeanManager beanManager;
    private static final String JAVAX_EJB_STATELESS = "javax.ejb.Stateless";
    private static final String JAVAX_EJB_SINGLETON = "javax.ejb.Singleton";
+   private static final String JAVAX_WS_RS = "javax.ws.rs";
 
-   private final List<Class> providers = new ArrayList<Class>();
-   private final List<Class> resources = new ArrayList<Class>();
+   private final List<Class> providers = new ArrayList<>();
+   private final List<Class> resources = new ArrayList<>();
+
+   private final Map<Class<?>, Set<Annotation>> stereotypedClasses = new HashMap<>();
 
    // Scope literals
    public static final Annotation requestScopedLiteral = new AnnotationLiteral<RequestScoped>()
@@ -66,8 +73,8 @@ public class ResteasyCdiExtension implements Extension
    {
       return active;
    }
-   
-   private Map<Class<?>, Type> sessionBeanInterface = new HashMap<Class<?>, Type>();
+
+   private Map<Class<?>, Type> sessionBeanInterface = new HashMap<>();
 
    /**
     * Obtain BeanManager reference for future use.
@@ -76,6 +83,47 @@ public class ResteasyCdiExtension implements Extension
    {
       this.beanManager = beanManager;
       active = true;
+   }
+
+   public <T> void observeStereotypes(@WithAnnotations({Stereotype.class}) @Observes ProcessAnnotatedType<T> event, BeanManager manager)
+   {
+      AnnotatedType<T> annotatedType = event.getAnnotatedType();
+      Set<Annotation> jaxRsAnnotations = collectJaxRsAnnotation(annotatedType.getAnnotations(), beanManager);
+
+      //TODO fix isJaxrsAnnotatedClass?
+      if (Utils.isAnnotationPresent(Path.class, jaxRsAnnotations))
+      {
+         stereotypedClasses.put(annotatedType.getJavaClass(), jaxRsAnnotations);
+      }
+   }
+
+   private Set<Annotation> collectJaxRsAnnotation(Set<Annotation> annotations, BeanManager beanManager)
+   {
+      Set<Annotation> jaxRsAnnotations = new HashSet<>();
+
+      for (Annotation annotation : annotations)
+      {
+         if (isJaxRsAnnotation(annotation))
+         {
+            jaxRsAnnotations.add(annotation);
+         } else if (beanManager.isStereotype(annotation.annotationType()))
+         {
+            Set<Annotation> stereotypeDefinition = beanManager.getStereotypeDefinition(annotation.annotationType());
+            jaxRsAnnotations.addAll(collectJaxRsAnnotation(stereotypeDefinition, beanManager));
+         }
+      }
+
+      return jaxRsAnnotations;
+   }
+
+   private boolean isJaxRsAnnotation(Annotation annotation)
+   {
+      return annotation.annotationType().getName().startsWith(JAVAX_WS_RS);
+   }
+
+   public Map<Class<?>, Set<Annotation>> getStereotypedClasses()
+   {
+      return Collections.unmodifiableMap(stereotypedClasses);
    }
 
    /**

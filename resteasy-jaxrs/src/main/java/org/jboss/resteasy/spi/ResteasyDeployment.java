@@ -13,6 +13,7 @@ import org.jboss.resteasy.plugins.providers.ServerFormUrlEncodedProvider;
 import org.jboss.resteasy.plugins.server.resourcefactory.JndiComponentResourceFactory;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.LogMessages;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
+import org.jboss.resteasy.spi.metadata.ResourceBuilderSupplier;
 import org.jboss.resteasy.util.GetRestful;
 
 import javax.ws.rs.container.ResourceContext;
@@ -95,7 +96,7 @@ public class ResteasyDeployment
    protected void startInternal()
    {
       // it is very important that each deployment create their own provider factory
-      // this allows each WAR to have their own set of providers 
+      // this allows each WAR to have their own set of providers
       if (providerFactory == null) providerFactory = new ResteasyProviderFactory();
       providerFactory.setRegisterBuiltins(registerBuiltin);
 
@@ -174,7 +175,7 @@ public class ResteasyDeployment
       // push context data so we can inject it
       Map contextDataMap = ResteasyProviderFactory.getContextDataMap();
       contextDataMap.putAll(dispatcher.getDefaultContextObjects());
-      
+
       try
       {
          if (injectorFactoryClass != null)
@@ -386,6 +387,7 @@ public class ResteasyDeployment
    public void registration()
    {
       boolean useScanning = true;
+      ResteasyProviderFactory.getContextDataMap().put(ResourceBuilder.class, ResourceBuilderSupplier.getBuilder());
       if (application != null)
       {
          dispatcher.getDefaultContextObjects().put(Application.class, application);
@@ -993,7 +995,7 @@ public class ResteasyDeployment
    {
       this.widerRequestMatching = widerRequestMatching;
    }
-   
+
    public boolean isAddCharset()
    {
       return addCharset;

@@ -11,9 +11,10 @@ import org.jboss.resteasy.specimpl.ResteasyUriBuilder;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.InjectorFactory;
 import org.jboss.resteasy.spi.Registry;
+import org.jboss.resteasy.spi.ResourceBuilder;
 import org.jboss.resteasy.spi.ResourceFactory;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.jboss.resteasy.spi.metadata.ResourceBuilder;
+import org.jboss.resteasy.spi.metadata.ResourceBuilderSupplier;
 import org.jboss.resteasy.spi.metadata.ResourceClass;
 import org.jboss.resteasy.spi.metadata.ResourceLocator;
 import org.jboss.resteasy.spi.metadata.ResourceMethod;
@@ -213,13 +214,13 @@ public class ResourceMethodRegistry implements Registry
          {
             for (Class<?> intf : clazz.getInterfaces())
             {
-               ResourceClass resourceClass = ResourceBuilder.rootResourceFromAnnotations(intf);
+               ResourceClass resourceClass = ResourceBuilderSupplier.getBuilder().rootResourceFromAnnotations(intf);
                register(ref, base, resourceClass);
             }
          }
          else
          {
-            ResourceClass resourceClass = ResourceBuilder.rootResourceFromAnnotations(clazz);
+            ResourceClass resourceClass = ResourceBuilderSupplier.getBuilder().rootResourceFromAnnotations(clazz);
             register(ref, base, resourceClass);
          }
       }
@@ -229,7 +230,7 @@ public class ResourceMethodRegistry implements Registry
       {
          for (Method method : getDeclaredMethods(clazz))
          {
-            Method _method = ResourceBuilder.findAnnotatedMethod(clazz, method);
+            Method _method = ResourceBuilderSupplier.getBuilder().findAnnotatedMethod(clazz, method);
             if (_method != null && !java.lang.reflect.Modifier.isPublic(_method.getModifiers()))
             {
                LogMessages.LOGGER.JAXRSAnnotationsFoundAtNonPublicMethod(method.getDeclaringClass().getName(), method.getName());

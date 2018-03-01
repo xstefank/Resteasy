@@ -7,6 +7,7 @@ import org.jboss.resteasy.annotations.Suspend;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.LogMessages;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
 import org.jboss.resteasy.specimpl.ResteasyUriBuilder;
+import org.jboss.resteasy.spi.ResourceBuilder;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.util.IsHttpMethod;
@@ -54,7 +55,7 @@ import static org.jboss.resteasy.util.FindAnnotation.findAnnotation;
  * @version $Revision: 1 $
  */
 @SuppressWarnings(value = "unchecked")
-public class ResourceBuilder
+public class JaxrsResourceBuilder implements ResourceBuilder
 {
    public static class ResourceClassBuilder
    {
@@ -697,14 +698,8 @@ public class ResourceBuilder
       return new ResourceClassBuilder(root, null);
    }
 
-
-   /**
-    * Picks a constructor from an annotated resource class based on spec rules
-    *
-    * @param annotatedResourceClass
-    * @return
-    */
-   public static ResourceConstructor constructor(Class<?> annotatedResourceClass)
+   @Override
+   public ResourceConstructor constructor(Class<?> annotatedResourceClass)
    {
       Constructor constructor = PickConstructor.pickPerRequestConstructor(annotatedResourceClass);
       if (constructor == null)
@@ -724,17 +719,19 @@ public class ResourceBuilder
     *
     * @return
     */
-   public static ResourceClass rootResourceFromAnnotations(Class<?> clazz)
+   @Override
+   public ResourceClass rootResourceFromAnnotations(Class<?> clazz)
    {
       return fromAnnotations(false, clazz);
    }
 
-   public static ResourceClass locatorFromAnnotations(Class<?> clazz)
+   @Override
+   public ResourceClass locatorFromAnnotations(Class<?> clazz)
    {
       return fromAnnotations(true, clazz);
    }
 
-   private static ResourceClass fromAnnotations(boolean isLocator, Class<?> clazz)
+   private ResourceClass fromAnnotations(boolean isLocator, Class<?> clazz)
    {
       // stupid hack for Weld as it loses generic type information, but retains annotations.
       if (!clazz.isInterface() && clazz.getSuperclass() != null && !clazz.getSuperclass().equals(Object.class) && clazz.isSynthetic())
@@ -765,14 +762,8 @@ public class ResourceBuilder
       return builder.buildClass();
    }
 
-   /**
-    * Find the annotated resource method or sub-resource method / sub-resource locator in the class hierarchy.
-    *
-    * @param root The root resource class.
-    * @param implementation The resource method or sub-resource method / sub-resource locator implementation
-    * @return The annotated resource method or sub-resource method / sub-resource locator.
-    */
-   public static Method findAnnotatedMethod(final Class<?> root, final Method implementation)
+   @Override
+   public Method findAnnotatedMethod(final Class<?> root, final Method implementation)
    {
       if (implementation.isSynthetic())
       {
@@ -953,7 +944,7 @@ public class ResourceBuilder
       }
    }
 
-   protected static void processMethod(boolean isLocator, ResourceClassBuilder resourceClassBuilder, Class<?> root, Method implementation)
+   protected void processMethod(boolean isLocator, ResourceClassBuilder resourceClassBuilder, Class<?> root, Method implementation)
    {
       Method method = findAnnotatedMethod(root, implementation);
       if (method != null)
@@ -981,14 +972,11 @@ public class ResourceBuilder
                else if (httpMethod.equalsIgnoreCase(HttpMethod.HEAD)) resourceMethodBuilder.head();
                else resourceMethodBuilder.httpMethod(httpMethod);
             }
-            Produces produces = method.getAnnotation(Produces.class);
-            if (produces == null) produces = resourceClassBuilder.resourceClass.getClazz().getAnnotation(Produces.class);
-            if (produces == null) produces = method.getDeclaringClass().getAnnotation(Produces.class);
+
+            Produces produces = getAnnotationFromResource(Produces.class, method, resourceClassBuilder.resourceClass);
             if (produces != null) resourceMethodBuilder.produces(produces.value());
 
-            Consumes consumes = method.getAnnotation(Consumes.class);
-            if (consumes == null) consumes = resourceClassBuilder.resourceClass.getClazz().getAnnotation(Consumes.class);
-            if (consumes == null) consumes = method.getDeclaringClass().getAnnotation(Consumes.class);
+            Consumes consumes = getAnnotationFromResource(Consumes.class, method, resourceClassBuilder.resourceClass);
             if (consumes != null) resourceMethodBuilder.consumes(consumes.value());
          }
          Path methodPath = method.getAnnotation(Path.class);
@@ -999,6 +987,15 @@ public class ResourceBuilder
          }
          resourceLocatorBuilder.buildMethod();
       }
+   }
+
+   protected <T extends Annotation> T getAnnotationFromResource(Class<T> annotationClass, Method method, ResourceClass resourceClass)
+   {
+      T annotation = method.getAnnotation(annotationClass);
+      if (annotation == null) annotation = resourceClass.getClazz().getAnnotation(annotationClass);
+      if (annotation == null) annotation = method.getDeclaringClass().getAnnotation(annotationClass);
+
+      return annotation;
    }
 
 }
