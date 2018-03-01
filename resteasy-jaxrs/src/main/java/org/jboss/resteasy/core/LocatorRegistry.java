@@ -1,18 +1,15 @@
 package org.jboss.resteasy.core;
 
 import org.jboss.resteasy.core.registry.RootNode;
-import org.jboss.resteasy.specimpl.ResteasyUriBuilder;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.InjectorFactory;
-import org.jboss.resteasy.spi.ResourceFactory;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.jboss.resteasy.spi.metadata.ResourceBuilder;
+import org.jboss.resteasy.spi.metadata.ResourceBuilderSupplier;
 import org.jboss.resteasy.spi.metadata.ResourceClass;
 import org.jboss.resteasy.spi.metadata.ResourceLocator;
 import org.jboss.resteasy.spi.metadata.ResourceMethod;
 
 import java.lang.reflect.Proxy;
-import java.util.List;
 
 /**
  * @author <a href="mailto:bill@burkecentral.com">Bill Burke</a>
@@ -30,13 +27,13 @@ public class LocatorRegistry
       {
          for (Class<?> intf : clazz.getInterfaces())
          {
-            ResourceClass resourceClass = ResourceBuilder.locatorFromAnnotations(intf);
+            ResourceClass resourceClass = ResourceBuilderSupplier.getBuilder().locatorFromAnnotations(intf);
             register(resourceClass);
          }
       }
       else
       {
-         ResourceClass resourceClass = ResourceBuilder.locatorFromAnnotations(clazz);
+         ResourceClass resourceClass = ResourceBuilderSupplier.getBuilder().locatorFromAnnotations(clazz);
          register(resourceClass);
       }
    }

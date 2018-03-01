@@ -4,7 +4,7 @@ import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.HttpResponse;
 import org.jboss.resteasy.spi.ResourceFactory;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.jboss.resteasy.spi.metadata.ResourceBuilder;
+import org.jboss.resteasy.spi.metadata.ResourceBuilderSupplier;
 import org.jboss.resteasy.spi.metadata.ResourceClass;
 
 /**
@@ -21,7 +21,7 @@ public class SingletonResource implements ResourceFactory
    public SingletonResource(Object obj)
    {
       this.obj = obj;
-      this.resourceClass = ResourceBuilder.rootResourceFromAnnotations(obj.getClass());
+      this.resourceClass = ResourceBuilderSupplier.getBuilder().rootResourceFromAnnotations(obj.getClass());
    }
 
    public SingletonResource(Object obj, ResourceClass resourceClass)
