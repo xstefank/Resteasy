@@ -9,6 +9,7 @@ import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
 import org.jboss.resteasy.specimpl.ResteasyUriBuilder;
 import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.util.AnnotationResolver;
 import org.jboss.resteasy.util.IsHttpMethod;
 import org.jboss.resteasy.util.MediaTypeHelper;
 import org.jboss.resteasy.util.MethodHashing;
@@ -56,6 +57,8 @@ import static org.jboss.resteasy.util.FindAnnotation.findAnnotation;
 @SuppressWarnings(value = "unchecked")
 public class ResourceBuilder
 {
+   private static AnnotationResolver annotationResolver = AnnotationResolver.newInstance();
+   
    public static class ResourceClassBuilder
    {
       final ResourceClass resourceClass;
@@ -747,7 +750,7 @@ public class ResourceBuilder
       if (isLocator) builder = locator(clazz);
       else
       {
-         Path path = clazz.getAnnotation(Path.class);
+         Path path = annotationResolver.getAnnotationFromClass(Path.class, clazz);
          if (path == null) builder = rootResource(clazz, null);
          else builder = rootResource(clazz, path.value());
       }
@@ -981,14 +984,10 @@ public class ResourceBuilder
                else if (httpMethod.equalsIgnoreCase(HttpMethod.HEAD)) resourceMethodBuilder.head();
                else resourceMethodBuilder.httpMethod(httpMethod);
             }
-            Produces produces = method.getAnnotation(Produces.class);
-            if (produces == null) produces = resourceClassBuilder.resourceClass.getClazz().getAnnotation(Produces.class);
-            if (produces == null) produces = method.getDeclaringClass().getAnnotation(Produces.class);
+            Produces produces = annotationResolver.getAnnotationFromResourceMethod(Produces.class, method, resourceClassBuilder.resourceClass);
             if (produces != null) resourceMethodBuilder.produces(produces.value());
 
-            Consumes consumes = method.getAnnotation(Consumes.class);
-            if (consumes == null) consumes = resourceClassBuilder.resourceClass.getClazz().getAnnotation(Consumes.class);
-            if (consumes == null) consumes = method.getDeclaringClass().getAnnotation(Consumes.class);
+            Consumes consumes = annotationResolver.getAnnotationFromResourceMethod(Consumes.class, method, resourceClassBuilder.resourceClass);
             if (consumes != null) resourceMethodBuilder.consumes(consumes.value());
          }
          Path methodPath = method.getAnnotation(Path.class);

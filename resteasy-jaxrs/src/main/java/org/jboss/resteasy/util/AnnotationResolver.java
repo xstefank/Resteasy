@@ -1,11 +1,30 @@
 package org.jboss.resteasy.util;
 
+import org.jboss.resteasy.spi.metadata.ResourceClass;
+
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Method;
+import java.util.Iterator;
+import java.util.ServiceLoader;
 
 public class AnnotationResolver
 {
+   
+   public static AnnotationResolver newInstance()
+   {
+      ServiceLoader<AnnotationResolver> loader = ServiceLoader.load(AnnotationResolver.class, Thread.currentThread().getContextClassLoader());
+
+      Iterator<AnnotationResolver> it = loader.iterator();
+      if (it.hasNext())
+      {
+         return it.next();
+      }
+      
+      return new AnnotationResolver();
+   }
+   
    @SuppressWarnings(value = "unchecked")
-   public static Class getClassWithAnnotation(Class<?> clazz, Class<? extends Annotation> annotation)
+   public <T extends Annotation> Class getClassWithAnnotation(Class<?> clazz, Class<T> annotation)
    {
       if (clazz.isAnnotationPresent(annotation))
       {
@@ -26,4 +45,19 @@ public class AnnotationResolver
       return null;
 
    }
+
+   public <T extends Annotation> T getAnnotationFromClass(Class<T> annotationClass, Class<?> clazz)
+   {
+      return clazz.getAnnotation(annotationClass);
+   }
+
+   public <T extends Annotation> T getAnnotationFromResourceMethod(Class<T> annotationClass, Method method, ResourceClass resourceClass)
+   {
+      T annotation = method.getAnnotation(annotationClass);
+      if (annotation == null) annotation = resourceClass.getClazz().getAnnotation(annotationClass);
+      if (annotation == null) annotation = method.getDeclaringClass().getAnnotation(annotationClass);
+      
+      return annotation;
+   }
+   
 }

@@ -6,11 +6,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.decorator.Decorator;
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.RequestScoped;
 import javax.enterprise.event.Observes;
+import javax.enterprise.inject.Stereotype;
+import javax.enterprise.inject.spi.AnnotatedMember;
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
@@ -19,6 +22,7 @@ import javax.enterprise.inject.spi.Extension;
 import javax.enterprise.inject.spi.InjectionTarget;
 import javax.enterprise.inject.spi.ProcessAnnotatedType;
 import javax.enterprise.inject.spi.ProcessInjectionTarget;
+import javax.enterprise.inject.spi.ProcessProducer;
 import javax.enterprise.inject.spi.ProcessSessionBean;
 import javax.enterprise.inject.spi.WithAnnotations;
 import javax.enterprise.util.AnnotationLiteral;
@@ -152,6 +156,30 @@ public class ResteasyCdiExtension implements Extension
       {
          LogMessages.LOGGER.debug(Messages.MESSAGES.beanDoesNotHaveScopeDefined(type.getJavaClass(), scope));
          return new JaxrsAnnotatedType<T>(type, scope);
+      }
+   }
+
+   public <T> void observeStereotypedClasses(@WithAnnotations(Stereotype.class) @Observes ProcessAnnotatedType<T> event, BeanManager beanManager)
+   {
+      AnnotatedType<T> annotatedType = event.getAnnotatedType();
+      processStereotypes(annotatedType.getAnnotations(), annotatedType.getJavaClass(), beanManager);
+   }
+
+   public <T, X> void observeProducers(@Observes ProcessProducer<T, X> event, BeanManager beanManager)
+   {
+      AnnotatedMember<T> annotatedMember = event.getAnnotatedMember();
+      //maybe add parent class if @Path is present in @Stereotype???
+      processStereotypes(annotatedMember.getAnnotations(), null, beanManager);
+   }
+
+   private <T> void processStereotypes(Set<Annotation> annotations, Class<T> clazz, BeanManager beanManager)
+   {
+      for (Annotation annotation : annotations)
+      {
+         if (beanManager.isStereotype(annotation.annotationType()))
+         {
+            Stereotypes.addStereotype(annotation.annotationType(), clazz, beanManager);
+         }
       }
    }
 
