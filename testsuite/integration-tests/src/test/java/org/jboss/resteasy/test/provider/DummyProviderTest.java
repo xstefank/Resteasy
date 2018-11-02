@@ -39,14 +39,13 @@ public class DummyProviderTest
    public static Archive<?> deploy() {
       WebArchive war = TestUtil.prepareArchive(DummyProviderTest.class.getSimpleName());
       war.addClass(Dummy.class);
-      war.addClass(DummyProvider.class);
-      return TestUtil.finishContainerPrepare(war, null, ProviderResource.class);
+      return TestUtil.finishContainerPrepare(war, null, DummyProvider.class, ProviderResource.class);
    }
    
    @Test
    public void test() throws Exception {
       Response response = client.target(generateURL("/provider/get")).request().get();
-      Assert.assertEquals(HttpResponseCodes.SC_OK, response.getStatus());
+      Assert.assertEquals(200, response.getStatus());
       Assert.assertEquals("Dummy provider foo", response.readEntity(String.class));
       response.close();
    }
