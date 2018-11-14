@@ -3,6 +3,7 @@ package org.jboss.resteasy.core.interception;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import org.jboss.resteasy.spi.interception.AcceptedByMethod;
+import org.jboss.resteasy.util.AnnotationResolver;
 
 import javax.annotation.Priority;
 import javax.ws.rs.NameBinding;
@@ -74,6 +75,8 @@ public class JaxrsInterceptorRegistry<T>
       protected volatile boolean initialized;
       protected boolean ignorePrematch;
 
+      private AnnotationResolver annotationResolver = AnnotationResolver.getInstance();
+
       public AbstractInterceptorFactory(Class declaring)
       {
          this.declaring = getNonSyntheticClass(declaring);
@@ -117,14 +120,14 @@ public class JaxrsInterceptorRegistry<T>
       @Override
       public Match preMatch()
       {
-         if (declaring.isAnnotationPresent(PreMatching.class)) return new Match(getInterceptor(), order);
+         if (annotationResolver.isAnnotationPresent(PreMatching.class, declaring)) return new Match(getInterceptor(), order);
          return null;
       }
 
       @Override
       public Match postMatch(Class targetClass, AccessibleObject target)
       {
-         if (!ignorePrematch && declaring.isAnnotationPresent(PreMatching.class)) return null;
+         if (!ignorePrematch && annotationResolver.isAnnotationPresent(PreMatching.class, declaring)) return null;
          if (targetClass != null && target != null)
          {
             if (nameBound.size() > 0)

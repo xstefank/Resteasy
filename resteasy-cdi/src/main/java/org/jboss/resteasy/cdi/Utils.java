@@ -2,6 +2,7 @@ package org.jboss.resteasy.cdi;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.util.Set;
 
 import javax.enterprise.inject.spi.AnnotatedType;
 import javax.enterprise.inject.spi.BeanManager;
@@ -144,5 +145,18 @@ public class Utils
          }
       }
       return false;
+   }
+
+   public static <T extends Annotation> T getAnnotation(Class<T> annotationClass, Set<Annotation> annotations)
+   {
+      for (Annotation annoation : annotations)
+      {
+         if (annoation.annotationType().equals(annotationClass))
+         {
+            return (T) annoation;
+         }
+      }
+      
+      return null;
    }
 }

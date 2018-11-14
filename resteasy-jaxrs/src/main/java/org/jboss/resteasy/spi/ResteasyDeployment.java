@@ -79,6 +79,12 @@ public class ResteasyDeployment
    protected ThreadLocalResteasyProviderFactory threadLocalProviderFactory;
    protected String paramMapping;
    private Map<String, Object> properties = new TreeMap<String, Object>();
+   private static List<ResteasyDeploymentObserver> observers = new ArrayList<>();
+
+   public static void registerObserver(ResteasyDeploymentObserver observer)
+   {
+      observers.add(observer);
+   }
 
    @SuppressWarnings(value = "unchecked")
    public void start()
@@ -452,6 +458,11 @@ public class ResteasyDeployment
          }
       }
 
+      for (ResteasyDeploymentObserver observer : observers)
+      {
+         observer.deploymentCreated(this);
+      }
+
       if (useScanning && scannedResourceClasses != null)
       {
          for (String resource : scannedResourceClasses)
@@ -537,6 +548,11 @@ public class ResteasyDeployment
 
       ResteasyProviderFactory.clearInstanceIfEqual(threadLocalProviderFactory);
       ResteasyProviderFactory.clearInstanceIfEqual(providerFactory);
+
+      for (ResteasyDeploymentObserver observer : observers)
+      {
+         observer.deploymentDestroyed(this);
+      }
    }
 
    /**

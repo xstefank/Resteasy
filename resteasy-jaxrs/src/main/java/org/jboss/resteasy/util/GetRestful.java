@@ -13,6 +13,9 @@ import java.util.List;
  */
 public class GetRestful
 {
+   
+   private static AnnotationResolver annotationResolver = AnnotationResolver.getInstance();
+   
    /**
     * Given a class, search itself and implemented interfaces for jax-rs annotations.
     *
@@ -21,7 +24,7 @@ public class GetRestful
     */
    public static Class getRootResourceClass(Class clazz)
    {
-      return AnnotationResolver.getClassWithAnnotation(clazz, Path.class);
+      return AnnotationResolver.getInstance().getClassWithAnnotation(clazz, Path.class);
    }
 
    /**
