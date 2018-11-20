@@ -42,6 +42,7 @@ import org.jboss.resteasy.spi.metadata.ResourceClassProcessor;
 import org.jboss.resteasy.spi.util.PickConstructor;
 import org.jboss.resteasy.spi.util.Types;
 import org.jboss.resteasy.tracing.RESTEasyTracingLogger;
+import org.jboss.resteasy.util.AnnotationResolver;
 import org.jboss.resteasy.util.FeatureContextDelegate;
 
 import javax.annotation.Priority;
@@ -251,6 +252,8 @@ public class ResteasyProviderFactoryImpl extends ResteasyProviderFactory impleme
    protected Set<Feature> enabledFeatures;
    protected Set<Class<?>> providerClasses;
    protected Set<Object> providerInstances;
+   private AnnotationResolver annotationResolver = AnnotationResolver.getInstance();
+
 
    public ResteasyProviderFactoryImpl()
    {
@@ -762,7 +765,7 @@ public class ResteasyProviderFactoryImpl extends ResteasyProviderFactory impleme
       injectProperties(providerClass, provider);
       Consumes consumeMime = provider.getClass().getAnnotation(Consumes.class);
       RuntimeType type = null;
-      ConstrainedTo constrainedTo = providerClass.getAnnotation(ConstrainedTo.class);
+      ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, providerClass);
       if (constrainedTo != null)
          type = constrainedTo.value();
 
@@ -828,7 +831,7 @@ public class ResteasyProviderFactoryImpl extends ResteasyProviderFactory impleme
       SortedKey<MessageBodyWriter> key = new SortedKey<MessageBodyWriter>(MessageBodyWriter.class, provider,
             providerClass, priority, isBuiltin);
       RuntimeType type = null;
-      ConstrainedTo constrainedTo = providerClass.getAnnotation(ConstrainedTo.class);
+      ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, providerClass);
       if (constrainedTo != null)
          type = constrainedTo.value();
 
@@ -1465,7 +1468,7 @@ public class ResteasyProviderFactoryImpl extends ResteasyProviderFactory impleme
       }
       if (isA(provider, ReaderInterceptor.class, contracts))
       {
-         ConstrainedTo constrainedTo = (ConstrainedTo) provider.getAnnotation(ConstrainedTo.class);
+         ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, provider);
          int priority = getPriority(priorityOverride, contracts, ReaderInterceptor.class, provider);
          if (constrainedTo != null && constrainedTo.value() == RuntimeType.SERVER)
          {
@@ -1500,7 +1503,7 @@ public class ResteasyProviderFactoryImpl extends ResteasyProviderFactory impleme
       }
       if (isA(provider, WriterInterceptor.class, contracts))
       {
-         ConstrainedTo constrainedTo = (ConstrainedTo) provider.getAnnotation(ConstrainedTo.class);
+         ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, provider);
          int priority = getPriority(priorityOverride, contracts, WriterInterceptor.class, provider);
          if (constrainedTo != null && constrainedTo.value() == RuntimeType.SERVER)
          {
@@ -1579,7 +1582,7 @@ public class ResteasyProviderFactoryImpl extends ResteasyProviderFactory impleme
       }
       if (isA(provider, DynamicFeature.class, contracts))
       {
-         ConstrainedTo constrainedTo = (ConstrainedTo) provider.getAnnotation(ConstrainedTo.class);
+         ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, provider);
          int priority = getPriority(priorityOverride, contracts, DynamicFeature.class, provider);
          if (constrainedTo != null && constrainedTo.value() == RuntimeType.SERVER)
          {
@@ -1614,7 +1617,7 @@ public class ResteasyProviderFactoryImpl extends ResteasyProviderFactory impleme
       }
       if (isA(provider, Feature.class, contracts))
       {
-         ConstrainedTo constrainedTo = (ConstrainedTo) provider.getAnnotation(ConstrainedTo.class);
+         ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, provider);
          int priority = getPriority(priorityOverride, contracts, Feature.class, provider);
          Feature feature = injectedInstance((Class<? extends Feature>) provider);
          if (constrainedTo == null || constrainedTo.value() == getRuntimeType())
@@ -1848,7 +1851,7 @@ public class ResteasyProviderFactoryImpl extends ResteasyProviderFactory impleme
       }
       if (isA(provider, ReaderInterceptor.class, contracts))
       {
-         ConstrainedTo constrainedTo = (ConstrainedTo) provider.getClass().getAnnotation(ConstrainedTo.class);
+         ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, provider.getClass());
          int priority = getPriority(priorityOverride, contracts, ReaderInterceptor.class, provider.getClass());
          if (constrainedTo != null && constrainedTo.value() == RuntimeType.SERVER)
          {
@@ -1883,7 +1886,7 @@ public class ResteasyProviderFactoryImpl extends ResteasyProviderFactory impleme
       }
       if (isA(provider, WriterInterceptor.class, contracts))
       {
-         ConstrainedTo constrainedTo = (ConstrainedTo) provider.getClass().getAnnotation(ConstrainedTo.class);
+         ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, provider.getClass());
          int priority = getPriority(priorityOverride, contracts, WriterInterceptor.class, provider.getClass());
          if (constrainedTo != null && constrainedTo.value() == RuntimeType.SERVER)
          {
@@ -1923,7 +1926,7 @@ public class ResteasyProviderFactoryImpl extends ResteasyProviderFactory impleme
       }
       if (isA(provider, DynamicFeature.class, contracts))
       {
-         ConstrainedTo constrainedTo = (ConstrainedTo) provider.getClass().getAnnotation(ConstrainedTo.class);
+         ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, provider.getClass());
          int priority = getPriority(priorityOverride, contracts, DynamicFeature.class, provider.getClass());
          if (constrainedTo != null && constrainedTo.value() == RuntimeType.SERVER)
          {
@@ -1960,7 +1963,7 @@ public class ResteasyProviderFactoryImpl extends ResteasyProviderFactory impleme
       {
          Feature feature = (Feature) provider;
          injectProperties(provider.getClass(), provider);
-         ConstrainedTo constrainedTo = (ConstrainedTo) provider.getClass().getAnnotation(ConstrainedTo.class);
+         ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, provider.getClass());
          if (constrainedTo == null || constrainedTo.value() == getRuntimeType())
          {
             if (feature.configure(new FeatureContextDelegate(this)))
