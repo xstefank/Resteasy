@@ -6,7 +6,8 @@ import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpAsyncClient4Engine;
 import org.jboss.resteasy.client.jaxrs.i18n.Messages;
 import org.jboss.resteasy.client.jaxrs.internal.ClientConfiguration;
 import org.jboss.resteasy.client.jaxrs.internal.LocalResteasyProviderFactory;
-import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
+import org.jboss.resteasy.plugins.server.servlet.ConfigurationBootstrap;
+import org.jboss.resteasy.spi.ResteasyDeployment;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import javax.net.ssl.HostnameVerifier;
@@ -358,8 +359,8 @@ public class ResteasyClientBuilder extends ClientBuilder
       if (providerFactory == null)
       {
          // create a new one
-         providerFactory = new LocalResteasyProviderFactory(new ResteasyProviderFactory());
-         RegisterBuiltin.register(providerFactory);
+         providerFactory = new LocalResteasyProviderFactory(ResteasyProviderFactory.getInstance());
+//         RegisterBuiltin.register(providerFactory);
       }
       return providerFactory;
    }

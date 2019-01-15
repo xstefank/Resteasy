@@ -371,7 +371,7 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
       stringConverters = parent == null ? new ConcurrentHashMap<>() : new ConcurrentHashMap<>(parent.getStringConverters());
       stringParameterUnmarshallers = parent == null ? new ConcurrentHashMap<>() : new ConcurrentHashMap<>(parent.getStringParameterUnmarshallers());
 
-      reactiveClasses = parent == null ? new ConcurrentHashMap<>() : new ConcurrentHashMap<>(parent.reactiveClasses);
+      reactiveClasses = parent == null ? new ConcurrentHashMap<>() : new ConcurrentHashMap<>(parent.getReactiveClasses());
       headerDelegates = parent == null ? new ConcurrentHashMap<>() : new ConcurrentHashMap<>(parent.getHeaderDelegates());
 
       precedence = new LegacyPrecedence();
@@ -3158,5 +3158,10 @@ public class ResteasyProviderFactory extends RuntimeDelegate implements Provider
    public boolean isReactive(Class<?> clazz)
    {
       return reactiveClasses.keySet().contains(clazz);
+   }
+
+   public Map<Class<?>, Class<? extends RxInvokerProvider<?>>> getReactiveClasses()
+   {
+      return reactiveClasses;
    }
 }
