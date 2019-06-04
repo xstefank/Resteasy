@@ -75,6 +75,8 @@ public class ClientHelper
 
    protected void initializeClientProviders(ResteasyProviderFactory factory)
    {
+      clientMessageBodyReaders = factory == null ? new MediaTypeMap<>() : rpf.getClientMessageBodyReaders().clone();
+      
       clientRequestFilterRegistry = factory == null ? new ClientRequestFilterRegistryImpl(rpf) : factory.getClientRequestFilterRegistry().clone(rpf);
       clientResponseFilters =  factory == null ? new ClientResponseFilterRegistryImpl(rpf) : factory.getClientResponseFilters().clone(rpf);
    }
