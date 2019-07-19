@@ -3,7 +3,7 @@ package org.jboss.resteasy.plugins.touri;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
 import org.jboss.resteasy.spi.ResteasyUriBuilder;
 import org.jboss.resteasy.spi.touri.URIResolver;
-import org.jboss.resteasy.util.AnnotationResolver;
+import org.jboss.resteasy.AnnotationResolver;
 
 import java.beans.BeanInfo;
 import java.beans.IntrospectionException;
@@ -20,17 +20,18 @@ import java.util.Map;
 public abstract class AbstractURITemplateAnnotationResolver implements
       URIResolver
 {
+   private static final AnnotationResolver annotationResolver = AnnotationResolver.getInstance();
 
    @SuppressWarnings("rawtypes")
    public boolean handles(Class type)
    {
-      return AnnotationResolver.getClassWithAnnotation(type, getAnnotationType()) != null;
+      return annotationResolver.getClassWithAnnotation(type, getAnnotationType()) != null;
    }
 
    @SuppressWarnings("unchecked")
    public String resolveURI(Object object)
    {
-      Class<? extends Object> clazz = AnnotationResolver
+      Class<? extends Object> clazz = annotationResolver
               .getClassWithAnnotation(object.getClass(), getAnnotationType());
       ResteasyUriBuilder uriBuilderImpl = getUriBuilder(clazz);
       Map<String, PropertyDescriptor> descriptors = getPropertyDescriptors(clazz);

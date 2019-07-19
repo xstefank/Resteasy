@@ -1,5 +1,7 @@
 package org.jboss.resteasy.util;
 
+import org.jboss.resteasy.AnnotationResolver;
+
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import java.lang.annotation.Annotation;
@@ -21,7 +23,7 @@ public class GetRestful
     */
    public static Class getRootResourceClass(Class clazz)
    {
-      return AnnotationResolver.getClassWithAnnotation(clazz, Path.class);
+      return AnnotationResolver.getInstance().getClassWithAnnotation(clazz, Path.class);
    }
 
    /**

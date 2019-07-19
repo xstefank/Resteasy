@@ -41,6 +41,7 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.ext.RuntimeDelegate;
 
+import org.jboss.resteasy.AnnotationResolver;
 import org.jboss.resteasy.annotations.Body;
 import org.jboss.resteasy.annotations.Form;
 import org.jboss.resteasy.annotations.Query;
@@ -1182,19 +1183,15 @@ public class ResourceBuilder
                else
                   resourceMethodBuilder.httpMethod(httpMethod);
             }
-            Produces produces = method.getAnnotation(Produces.class);
-            if (produces == null)
-               produces = resourceClassBuilder.resourceClass.getClazz().getAnnotation(Produces.class);
-            if (produces == null)
-               produces = method.getDeclaringClass().getAnnotation(Produces.class);
+            AnnotationResolver annotationResolver = AnnotationResolver.getInstance();
+
+            Produces produces = annotationResolver.getAnnotationFromResourceMethod(Produces.class, method,
+                  resourceClassBuilder.resourceClass);
             if (produces != null)
                resourceMethodBuilder.produces(produces.value());
 
-            Consumes consumes = method.getAnnotation(Consumes.class);
-            if (consumes == null)
-               consumes = resourceClassBuilder.resourceClass.getClazz().getAnnotation(Consumes.class);
-            if (consumes == null)
-               consumes = method.getDeclaringClass().getAnnotation(Consumes.class);
+            Consumes consumes = annotationResolver.getAnnotationFromResourceMethod(Consumes.class, method,
+                  resourceClassBuilder.resourceClass);
             if (consumes != null)
                resourceMethodBuilder.consumes(consumes.value());
          }
