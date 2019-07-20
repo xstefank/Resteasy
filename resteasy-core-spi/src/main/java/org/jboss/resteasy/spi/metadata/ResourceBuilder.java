@@ -259,7 +259,8 @@ public class ResourceBuilder
          Class<?> type = parameter.getResourceClass().getClazz();
 
          parameter.encoded = findAnnotation(annotations, Encoded.class) != null
-               || injectTarget.isAnnotationPresent(Encoded.class) || type.isAnnotationPresent(Encoded.class);
+               || injectTarget.isAnnotationPresent(Encoded.class)
+               || AnnotationResolver.getInstance().isAnnotationPresent(Encoded.class, type);
          DefaultValue defaultValue = findAnnotation(annotations, DefaultValue.class);
          if (defaultValue != null)
             parameter.defaultValue = defaultValue.value();
@@ -884,7 +885,7 @@ public class ResourceBuilder
          builder = buildLocator(clazz);
       else
       {
-         Path path = clazz.getAnnotation(Path.class);
+         Path path = AnnotationResolver.getInstance().getAnnotationFromClass(Path.class, clazz);
          if (path == null)
             builder = buildRootResource(clazz, null);
          else
@@ -1153,6 +1154,7 @@ public class ResourceBuilder
       Method method = getAnnotatedMethod(root, implementation);
       if (method != null)
       {
+         AnnotationResolver annotationResolver = AnnotationResolver.getInstance();
          Set<String> httpMethods = getHttpMethods(method);
 
          ResourceLocatorBuilder resourceLocatorBuilder;
@@ -1183,7 +1185,6 @@ public class ResourceBuilder
                else
                   resourceMethodBuilder.httpMethod(httpMethod);
             }
-            AnnotationResolver annotationResolver = AnnotationResolver.getInstance();
 
             Produces produces = annotationResolver.getAnnotationFromResourceMethod(Produces.class, method,
                   resourceClassBuilder.resourceClass);
@@ -1195,7 +1196,7 @@ public class ResourceBuilder
             if (consumes != null)
                resourceMethodBuilder.consumes(consumes.value());
          }
-         Path methodPath = method.getAnnotation(Path.class);
+         Path methodPath = annotationResolver.getAnnotationFromMethod(Path.class, method);
          if (methodPath != null)
             resourceLocatorBuilder.path(methodPath.value());
          for (int i = 0; i < resourceLocatorBuilder.locator.params.length; i++)

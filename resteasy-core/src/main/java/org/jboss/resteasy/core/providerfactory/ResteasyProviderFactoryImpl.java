@@ -57,6 +57,7 @@ import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.RuntimeDelegate;
 import javax.ws.rs.ext.WriterInterceptor;
 
+import org.jboss.resteasy.AnnotationResolver;
 import org.jboss.resteasy.core.InjectorFactoryImpl;
 import org.jboss.resteasy.core.MediaTypeMap;
 import org.jboss.resteasy.core.ResteasyContext;
@@ -120,6 +121,7 @@ public class ResteasyProviderFactoryImpl extends ResteasyProviderFactory impleme
    private Set<Feature> enabledFeatures;
    private Set<Class<?>> providerClasses;
    private Set<Object> providerInstances;
+   private AnnotationResolver annotationResolver = AnnotationResolver.getInstance();
 
    public ResteasyProviderFactoryImpl()
    {
@@ -962,7 +964,7 @@ public class ResteasyProviderFactoryImpl extends ResteasyProviderFactory impleme
       }
       if (Utils.isA(provider, Feature.class, contracts))
       {
-         ConstrainedTo constrainedTo = (ConstrainedTo) provider.getAnnotation(ConstrainedTo.class);
+         ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, provider);
          int priority = Utils.getPriority(priorityOverride, contracts, Feature.class, provider);
          Feature feature = injectedInstance((Class<? extends Feature>) provider);
          if (constrainedTo == null || constrainedTo.value() == getRuntimeType())
@@ -1089,7 +1091,7 @@ public class ResteasyProviderFactoryImpl extends ResteasyProviderFactory impleme
       {
          Feature feature = (Feature) provider;
          Utils.injectProperties(this, provider.getClass(), provider);
-         ConstrainedTo constrainedTo = (ConstrainedTo) provider.getClass().getAnnotation(ConstrainedTo.class);
+         ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, provider.getClass());
          if (constrainedTo == null || constrainedTo.value() == getRuntimeType())
          {
             if (feature.configure(new FeatureContextDelegate(this)))

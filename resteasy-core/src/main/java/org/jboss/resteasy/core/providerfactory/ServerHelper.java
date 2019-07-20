@@ -19,6 +19,7 @@ import javax.ws.rs.ext.MessageBodyWriter;
 import javax.ws.rs.ext.ReaderInterceptor;
 import javax.ws.rs.ext.WriterInterceptor;
 
+import org.jboss.resteasy.AnnotationResolver;
 import org.jboss.resteasy.core.MediaTypeMap;
 import org.jboss.resteasy.core.interception.jaxrs.ContainerRequestFilterRegistryImpl;
 import org.jboss.resteasy.core.interception.jaxrs.ContainerResponseFilterRegistryImpl;
@@ -47,6 +48,7 @@ public class ServerHelper
    private Set<DynamicFeature> serverDynamicFeatures;
    private Map<Class<?>, AsyncResponseProvider> asyncResponseProviders;
    private Map<Class<?>, AsyncStreamProvider> asyncStreamProviders;
+   private AnnotationResolver annotationResolver = AnnotationResolver.getInstance();
 
    public ServerHelper(final ResteasyProviderFactoryImpl rpf)
    {
@@ -169,7 +171,7 @@ public class ServerHelper
       }
       if (Utils.isA(provider, ReaderInterceptor.class, contracts))
       {
-         ConstrainedTo constrainedTo = (ConstrainedTo) provider.getAnnotation(ConstrainedTo.class);
+         ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, provider);
          int priority = Utils.getPriority(priorityOverride, contracts, ReaderInterceptor.class, provider);
          if (constrainedTo != null && constrainedTo.value() == RuntimeType.SERVER)
          {
@@ -191,7 +193,7 @@ public class ServerHelper
       }
       if (Utils.isA(provider, WriterInterceptor.class, contracts))
       {
-         ConstrainedTo constrainedTo = (ConstrainedTo) provider.getAnnotation(ConstrainedTo.class);
+         ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, provider);
          int priority = Utils.getPriority(priorityOverride, contracts, WriterInterceptor.class, provider);
          if (constrainedTo != null && constrainedTo.value() == RuntimeType.SERVER)
          {
@@ -213,7 +215,7 @@ public class ServerHelper
       }
       if (Utils.isA(provider, DynamicFeature.class, contracts))
       {
-         ConstrainedTo constrainedTo = (ConstrainedTo) provider.getAnnotation(ConstrainedTo.class);
+         ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, provider);
          int priority = Utils.getPriority(priorityOverride, contracts, DynamicFeature.class, provider);
          if (constrainedTo != null && constrainedTo.value() == RuntimeType.SERVER)
          {
@@ -314,7 +316,7 @@ public class ServerHelper
       }
       if (Utils.isA(provider, ReaderInterceptor.class, contracts))
       {
-         ConstrainedTo constrainedTo = (ConstrainedTo) provider.getClass().getAnnotation(ConstrainedTo.class);
+         ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, provider.getClass());
          int priority = Utils.getPriority(priorityOverride, contracts, ReaderInterceptor.class, provider.getClass());
          if (constrainedTo != null && constrainedTo.value() == RuntimeType.SERVER)
          {
@@ -336,7 +338,7 @@ public class ServerHelper
       }
       if (Utils.isA(provider, WriterInterceptor.class, contracts))
       {
-         ConstrainedTo constrainedTo = (ConstrainedTo) provider.getClass().getAnnotation(ConstrainedTo.class);
+         ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, provider.getClass());
          int priority = Utils.getPriority(priorityOverride, contracts, WriterInterceptor.class, provider.getClass());
          if (constrainedTo != null && constrainedTo.value() == RuntimeType.SERVER)
          {
@@ -358,7 +360,7 @@ public class ServerHelper
       }
       if (Utils.isA(provider, DynamicFeature.class, contracts))
       {
-         ConstrainedTo constrainedTo = (ConstrainedTo) provider.getClass().getAnnotation(ConstrainedTo.class);
+         ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, provider.getClass());
          int priority = Utils.getPriority(priorityOverride, contracts, DynamicFeature.class, provider.getClass());
          if (constrainedTo != null && constrainedTo.value() == RuntimeType.SERVER)
          {
@@ -428,7 +430,7 @@ public class ServerHelper
       Utils.injectProperties(rpf, providerClass, provider);
       Consumes consumeMime = provider.getClass().getAnnotation(Consumes.class);
       RuntimeType type = null;
-      ConstrainedTo constrainedTo = providerClass.getAnnotation(ConstrainedTo.class);
+      ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, providerClass);
       if (constrainedTo != null)
          type = constrainedTo.value();
 
@@ -471,7 +473,7 @@ public class ServerHelper
       SortedKey<MessageBodyWriter> key = new SortedKey<MessageBodyWriter>(MessageBodyWriter.class, provider,
             providerClass, priority, isBuiltin);
       RuntimeType type = null;
-      ConstrainedTo constrainedTo = providerClass.getAnnotation(ConstrainedTo.class);
+      ConstrainedTo constrainedTo = annotationResolver.getAnnotationFromClass(ConstrainedTo.class, providerClass);
       if (constrainedTo != null)
          type = constrainedTo.value();
 

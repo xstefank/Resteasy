@@ -1,5 +1,6 @@
 package org.jboss.resteasy.core.interception.jaxrs;
 
+import org.jboss.resteasy.AnnotationResolver;
 import org.jboss.resteasy.core.ResteasyContext;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -27,6 +28,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @SuppressWarnings({"unchecked", "rawtypes"})
 public class JaxrsInterceptorRegistryImpl<T> implements JaxrsInterceptorRegistry<T>
 {
+   private AnnotationResolver annotationResolver = AnnotationResolver.getInstance();
+
    protected static List<Class<? extends Annotation>> getNameBound(Class<?> declaring)
    {
       List<Class<? extends Annotation>> nameBound = new ArrayList<Class<? extends Annotation>>();
@@ -98,14 +101,15 @@ public class JaxrsInterceptorRegistryImpl<T> implements JaxrsInterceptorRegistry
       @Override
       public Match preMatch()
       {
-         if (declaring.isAnnotationPresent(PreMatching.class)) return new Match(getInterceptor(), order);
+         if (annotationResolver.isAnnotationPresent(PreMatching.class, declaring))
+            return new Match(getInterceptor(), order);
          return null;
       }
 
       @Override
       public Match postMatch(Class targetClass, AccessibleObject target)
       {
-         if (!ignorePrematch && declaring.isAnnotationPresent(PreMatching.class)) return null;
+         if (!ignorePrematch && annotationResolver.isAnnotationPresent(PreMatching.class, declaring)) return null;
          if (targetClass != null && target != null)
          {
             if (nameBound.size() > 0)

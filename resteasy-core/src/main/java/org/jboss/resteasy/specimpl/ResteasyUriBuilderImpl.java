@@ -1,5 +1,6 @@
 package org.jboss.resteasy.specimpl;
 
+import org.jboss.resteasy.AnnotationResolver;
 import org.jboss.resteasy.resteasy_jaxrs.i18n.Messages;
 import org.jboss.resteasy.spi.ResteasyUriBuilder;
 import org.jboss.resteasy.util.Encode;
@@ -371,7 +372,7 @@ public class ResteasyUriBuilderImpl extends ResteasyUriBuilder
    public UriBuilder path(Class resource) throws IllegalArgumentException
    {
       if (resource == null) throw new IllegalArgumentException(Messages.MESSAGES.pathNull());
-      Path ann = (Path) resource.getAnnotation(Path.class);
+      Path ann = AnnotationResolver.getInstance().getAnnotationFromClass(Path.class, resource);
       if (ann != null)
       {
          String[] segments = new String[]{ann.value()};

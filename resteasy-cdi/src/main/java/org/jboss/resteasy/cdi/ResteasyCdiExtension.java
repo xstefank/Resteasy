@@ -194,7 +194,7 @@ public class ResteasyCdiExtension implements Extension
    public <T> void observeStereotypedClasses(@WithAnnotations(Stereotype.class) @Observes ProcessAnnotatedType<T> event, BeanManager beanManager)
    {
       AnnotatedType<T> annotatedType = event.getAnnotatedType();
-      processStereotypes(annotatedType.getAnnotations(), beanManager);
+      processStereotypes(annotatedType.getAnnotations(), annotatedType.getJavaClass(), beanManager);
    }
 
    /**
@@ -203,16 +203,16 @@ public class ResteasyCdiExtension implements Extension
    public <T, X> void observeProducers(@Observes ProcessProducer<T, X> event, BeanManager beanManager)
    {
       AnnotatedMember<T> annotatedMember = event.getAnnotatedMember();
-      processStereotypes(annotatedMember.getAnnotations(), beanManager);
+      processStereotypes(annotatedMember.getAnnotations(), null, beanManager);
    }
 
-   private <T> void processStereotypes(Set<Annotation> annotations, BeanManager beanManager)
+   private <T> void processStereotypes(Set<Annotation> annotations, Class<?> clazz, BeanManager beanManager)
    {
       for (Annotation annotation : annotations)
       {
          if (beanManager.isStereotype(annotation.annotationType()))
          {
-            Stereotypes.getInstance().addStereotype(annotation.annotationType(), beanManager);
+            Stereotypes.getInstance().addStereotype(annotation.annotationType(), clazz, beanManager);
          }
       }
    }
