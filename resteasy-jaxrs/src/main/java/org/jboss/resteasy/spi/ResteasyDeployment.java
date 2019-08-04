@@ -80,6 +80,7 @@ public class ResteasyDeployment
    protected ThreadLocalResteasyProviderFactory threadLocalProviderFactory;
    protected String paramMapping;
    private Map<String, Object> properties = new TreeMap<String, Object>();
+   private static List<ResteasyDeploymentObserver> deploymentObservers = new ArrayList<>();
 
    @SuppressWarnings(value = "unchecked")
    public void start()
@@ -314,6 +315,11 @@ public class ResteasyDeployment
             }
             suffixNegotiationFilter.setLanguageMappings(languageExtensions);
          }
+
+         for (ResteasyDeploymentObserver observer : deploymentObservers)
+         {
+            observer.onStart(this);
+         }
       }
       finally
       {
@@ -538,6 +544,11 @@ public class ResteasyDeployment
 
       ResteasyProviderFactory.clearInstanceIfEqual(threadLocalProviderFactory);
       ResteasyProviderFactory.clearInstanceIfEqual(providerFactory);
+
+      for (ResteasyDeploymentObserver observer : deploymentObservers)
+      {
+         observer.onStop(this);
+      }
    }
 
    /**
@@ -1035,5 +1046,10 @@ public class ResteasyDeployment
 
    public void setProperty(String key, Object value) {
       properties.put(key, value);
+   }
+
+   public static void registerObserver(ResteasyDeploymentObserver observer)
+   {
+      deploymentObservers.add(observer);
    }
 }
